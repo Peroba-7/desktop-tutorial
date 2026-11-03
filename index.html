@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Domo - Gestão de Produtos</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background: #f4f4f9; }
+        h1 { color: #333; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input { padding: 8px; width: 300px; }
+        button { padding: 10px 15px; background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        ul { list-style: none; padding: 0; }
+        li { background: white; padding: 10px; margin-bottom: 8px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+
+    <h1>Lista de Produtos (DOMO)</h1>
+
+    <!-- Formulário para adicionar produto -->
+    <div class="form-group">
+        <label for="nome">Nome do Produto:</label>
+        <input type="text" id="nome" placeholder="Ex: Teclado Mecânico">
+    </div>
+    <div class="form-group">
+        <label for="preco">Preço (€):</label>
+        <input type="number" id="preco" step="0.01" placeholder="Ex: 49.99">
+    </div>
+    <button onclick="adicionarProduto()">Adicionar Produto</button>
+
+    <h2>Produtos Registados</h2>
+    <ul id="lista-produtos">Carregando...</ul>
+
+    <script>
+        const API_URL = "http://127.0.0.1:8000";
+
+        // Função para carregar produtos da API
+        async function carregarProdutos() {
+            try {
+                const resposta = await fetch(`${API_URL}/produtos/`);
+                const produtos = await resposta.json();
+                
+                const lista = document.getElementById("lista-produtos");
+                lista.innerHTML = "";
+
+                produtos.forEach(prod => {
+                    const item = document.createElement("li");
+                    item.textContent = `${prod.nome} - R$ ${prod.preco}`;
+                    lista.appendChild(item);
+                });
+            } catch (erro) {
+                console.error("Erro ao carregar produtos:", erro);
+                document.getElementById("lista-produtos").textContent = "Erro ao ligar à API.";
+            }
+        }
+
+        // Função para enviar um novo produto para a API
+        async function adicionarProduto() {
+            const nome = document.getElementById("nome").value;
+            const preco = parseFloat(document.getElementById("preco").value);
+
+            if (!nome || isNaN(preco)) {
+                alert("Por favor, preenche todos os campos corretamente.");
+                return;
+            }
+
+            try {
+                const resposta = await fetch(`${API_URL}/produtos/`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ nome: nome, preco: preco })
+                });
+
+                if (resposta.ok) {
+                    document.getElementById("nome").value = "";
+                    document.getElementById("preco").value = "";
+                    carregarProdutos(); // Atualiza a lista
+                } else {
+                    alert("Erro ao adicionar o produto.");
+                }
+            } catch (erro) {
+                console.error("Erro na requisição:", erro);
+            }
+        }
+
+        // Carregar os produtos assim que a página abrir
+        carregarProdutos();
+    </script>
+
+</body>
+</html>
